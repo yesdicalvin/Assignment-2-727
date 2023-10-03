@@ -101,3 +101,41 @@ print(corr_test_res)
 Analysis : 
 
 We can diagnose the relationship of search hits between these two keywords by looking at the plot above. There is a pattern between these two variables, which indicates a relationship. From January to October 2020, generally, they moved to different direction although after that until December 2020 they tend to had same direction. In other words, we can diagnose that there is a negative significant relationship. To make sure, we need to test it using the pearson correlation test. The correlation of hits between `crime` and `loans` is -0.54. There is a significant and negative relationship between the search intensities between `crime` and `loans`. As the search for `crime` is high, the search for `loans` is low.
+
+### Repeat the above for keywords related to covid. Make sure you use multiple keywords like we did above. Try several different combinations and think carefully about words that might make sense within this context.
+
+We try to use `coronavirus` and `hospital` as keywords. 
+
+```{r}
+set.seed(727)
+cov <- gtrends(c("coronavirus", "hospital"), 
+               geo = "US-IL", 
+               time = "2020-01-01 2020-12-31", 
+               low_search_volume = TRUE)
+```
+
+
+### 1. Compute mean, median, and variance of hits related to `coronavirus` and `hospital`.  
+
+```{r, warning=FALSE}
+# change the data format of interest over time into tibble
+res_cov <- as_tibble(cov$interest_over_time)
+as.numeric(res_cov$hits)
+
+# remove the value of hits with less than 1
+res_cov_sub <- subset(res_cov, hits >= 1)
+
+# change the format of hits into numeric
+res_cov_sub$hits <- as.numeric(res_cov_sub$hits)
+
+# compute mean, median, var of hits
+res_cov_sub %>%
+  group_by(keyword) %>%
+  summarize(mean_hits=mean(hits), 
+            med_hits=median(hits),
+            var_sd=var(hits))
+```
+
+Analysis:
+
+The mean of `coronavirus` hits is higher than hospital hits, with values of  15.8 and 3.8. A high discrepancy between the mean and median of `coronavirus` hits indicates the extremely high popularity of `coronavirus` searches at certain times. The variance of the `coronavirus` search is higher than the `hospital` search, with values of 426.16 and 0.21.
