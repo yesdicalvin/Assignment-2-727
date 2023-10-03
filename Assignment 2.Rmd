@@ -9,22 +9,54 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
-```{r cars}
-summary(cars)
+```{r, message = FALSE}
+# open library
+library(tidyverse)
+library(gtrendsR)
+library(censusapi)
+library(dplyr)
+library(ggplot2)
 ```
 
-## Including Plots
+## **Pulling from APIs**
 
-You can also embed plots, for example:
+Our first data source is the Google Trends API. Suppose we are interested in the search trends for crime and loans in Illinois in the year 2020. We could find this using the following code:
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+set.seed(727)
+res <- gtrends(c("crime", "loans"), 
+              geo = "US-IL", 
+            time = "2020-01-01 2020-12-31", 
+            low_search_volume = TRUE)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+### Answer the following questions for the keywords “crime” and “loans”.
+
+### 1. Find the mean, median and variance of the search hits for the keywords.
+
+```{r}
+# change the tibble into long format
+res_time_w <- pivot_wider(res$interest_over_time, 
+                          names_from = keyword, 
+                          values_from = hits)
+head(res_time_w)
+```
+
+```{r}
+# change the long format into the wide format
+res_time_w <- res_time_w %>%
+  pivot_longer(6:7, names_to = "keyword", values_to = "hits")
+```
+
+```{r}
+# compute mean, median, var of hits
+res_time_w %>%
+  group_by(keyword) %>%
+  summarize(mean_hits=mean(hits), 
+            med_hits=median(hits),
+            var_sd=var(hits))
+```
