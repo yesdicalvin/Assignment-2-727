@@ -363,3 +363,102 @@ print(correlation_test3)
 Analysis:
 
 The result shows that the correlation coefficient between the median income and `crime` is -0.01, and it is statistically not significant. This value indicates a weak and negative relationship between the two variables. If the median income is high, the search for `crime` tends to be high. On the other hand, the correlation between median income and `loan` is -0.27. This value shows a weak and negative relationship. This relationship is statistically insignificant. 
+
+### Repeat the above steps using the covid data and the ACS data.
+
+### 1. Check how many cities don't appear in both data sets
+
+```{r}
+# check cities in the cov_city_hos but don't appear in acs 
+cov2_not_in_acs <- cov_city_hos %>%
+  anti_join(acs_il, by = "location")
+
+# check cities in the acs but don't appear in cov_city_hos 
+acs_il_not_in_cov2 <- acs_il %>%
+  anti_join(cov_city_hos, by = "location")
+
+# compute total cities in the cov_city_hos but don't appear in acs
+count_cov2_not_in_acs <- nrow(cov2_not_in_acs)
+
+# compute total cities in the acs but don't appear in cov_city_hos 
+count_acs_il_not_in_cov2 <- nrow(acs_il_not_in_cov2)
+
+# print the result 
+cat("Cities in 'cov2' but not in 'acs_il':", count_cov2_not_in_acs, "\n")
+cat("Cities in 'acs_il' but not in 'cov2':", count_acs_il_not_in_cov2, "\n")
+cat("Total:",count_cov2_not_in_acs+count_acs_il_not_in_cov2,"\n")
+```
+
+Here, we found 1133 cities that do not appear in both data sets. 
+
+Below, we create a new data set by joining the Google Trends and the ACS data by keeping only cities that appear in both data sets.
+
+```{r}
+# join the data of cov_city_hos and acs with matched cities 
+join_cov2_acsil <- cov_city_hos %>%
+  inner_join(acs_il, by = "location")
+
+# check the result
+head(join_cov2_acsil)
+```
+
+### 2. Compute the mean of the search popularity for both keywords for cities that have an above average median household income and for those that have an below average median household income. 
+
+```{r}
+# create a grouping variable based on above/below average median "hh_income"
+join_cov2_acsil <- join_cov2_acsil %>%
+  mutate(income_group = ifelse(hh_income > mean(hh_income, na.rm = TRUE),
+                               "Above Average", "Below Average"))
+
+# remove the observation with NA value of hh_income
+join_cov2_acsil <- join_cov2_acsil[complete.cases(join_cov2_acsil[, "hh_income"]), ]
+
+# group by the "income_group" variable and calculate the mean for "coronavirus" and "hospital"
+mean_bygroup <- join_cov2_acsil %>%
+  group_by(income_group) %>%
+  summarise(
+    Mean_Coronavirus_Pop = mean(coronavirus, na.rm = TRUE),
+    Mean_Hospital_Pop = mean(hospital, na.rm = TRUE)
+  )
+
+# print the result
+print(mean_bygroup)
+```
+
+Analysis :
+
+Based on the table above, we can see that the average search for `coronavirus` and `hospital` is higher for cities with median household income above the average. People living in cities with a median household income above the average search the two keywords more frequently. 
+
+### 3. Check the relationship between the median household income and the search popularity of the Google trends terms. Describe the relationship and use a scatterplot with `qplot()`.
+
+```{r}
+# Create a scatterplot to visualize the relationship
+sc_plot1 <- qplot(x = hh_income, y = coronavirus, data = join_cov2_acsil, 
+          main = "Relationship Between Median Household Income and Coronavirus Search Popularity",
+          xlab = "Median Household Income", ylab = "Coronavirus Search Popularity")
+
+# Create a scatterplot to visualize the relationship
+sc_plot2 <- qplot(x = hh_income, y = hospital, data = join_cov2_acsil, 
+          main = "Relationship Between Median Household Income and Hospital Search Popularity",
+          xlab = "Median Household Income", ylab = "Hospital Search Popularity")
+
+# Print the scatterplot
+print(sc_plot1)
+print(sc_plot2)
+```
+
+```{r}
+# compute correlation and do correlation test for  median income with coronavirus 
+correlation_test2<-cor.test(join_cov2_acsil$hh_income, join_cov2_acsil$coronavirus)
+print(correlation_test2)
+
+# compute correlation and do correlation test for median income with hospital
+correlation_test3<-cor.test(join_cov2_acsil$hh_income, join_cov2_acsil$hospital)
+print(correlation_test3)
+```
+
+Analysis: 
+
+The scatter plot shows a slightly increasing pattern between median household income and the `coronavirus` popularity search. The distribution of median household income was concentrated from 0 to 75,000. The correlation value confirms this finding with a value of 0.27. This correlation score means that the search hits for `coronavirus` have a weak and positive relationship with the median household income. If the median household income is high, the value of search hits of `coronavirus` is also high. 
+
+The scatterplot between search hits of `hospital` and median household income shows a linear pattern. There is not any specific trend between the two variables. The correlation coefficient is insignificant, with a value of 0.00033, which means there is not any relationship between search hits of `hospital` and the median household income.
