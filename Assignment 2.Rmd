@@ -81,3 +81,23 @@ arrange(desc(loans))
 # print the result 
 print(res_city_loans)
 ```
+
+The locations with highest value of hits for `loans` in Illinois are Alorton, Rosemont, and Coal City. 
+
+### 3. Is there a relationship between the search intensities between the two keywords we used?
+
+```{r}
+# create plot for res
+plot(res)
+```
+
+
+```{r}
+# compute correlation and do correlation test for  median income with coronavirus 
+corr_test_res <-cor.test(res_city_loans$crime, res_city_loans$loans)
+print(corr_test_res)
+```
+
+Analysis : 
+
+We can diagnose the relationship of search hits between these two keywords by looking at the plot above. There is a pattern between these two variables, which indicates a relationship. From January to October 2020, generally, they moved to different direction although after that until December 2020 they tend to had same direction. In other words, we can diagnose that there is a negative significant relationship. To make sure, we need to test it using the pearson correlation test. The correlation of hits between `crime` and `loans` is -0.54. There is a significant and negative relationship between the search intensities between `crime` and `loans`. As the search for `crime` is high, the search for `loans` is low.
