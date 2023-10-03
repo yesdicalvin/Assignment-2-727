@@ -178,3 +178,188 @@ print(corr_test_cov)
 Analysis: 
 
 The graph shows the trend of the popularity of `coronavirus` search and `hospital` search in Illinois from January 1, 2020, to December 31, 2020. The plot of `coronavirus` search and `hospital` search popularity are different over time. There is a very high interest in `coronavirus` searches from February 2020 to May 2020. The popularity of `hospital` search is relatively stable over time. In other words, it means that they do not have a similar pattern. The correlation between `coronavirus` search and `hospital` search is -0.33, indicating a weak negative relationship. If the `coronavirus` search is high, the search of `hospital` tends to be low.
+
+
+## **Google Trends + ACS**
+
+Now lets add another data set. The censusapi package provides a nice R interface for communicating with this API. However, before running queries we need an access key. This (easy) process can be completed here:
+
+https://api.census.gov/data/key_signup.html
+
+Once you have an access key, store this key in the cs_key object. We will use this object in all following API queries.
+
+```{r, eval=FALSE}
+# get API key from getCensus
+ cs_key <- "7b7f40a6d561e9e43edb14fec7e8b645055a65ed"
+```
+
+In the following, we request basic socio-demographic information (population, median age, median household income, income per capita) for cities and villages in the state of Illinois.
+
+```{r, eval=FALSE}
+# generate the data with getCensus function
+acs_il <- getCensus(name = "acs/acs5",
+                    vintage = 2020, 
+                    vars = c("NAME", 
+                             "B01001_001E", 
+                             "B06002_001E", 
+                             "B19013_001E", 
+                             "B19301_001E"), 
+                    region = "place:*", 
+                    regionin = "state:17",
+                    key = cs_key)
+head(acs_il)
+```
+
+Convert values that represent missings to NAs.
+
+```{r, eval=FALSE}
+# convert the missing value to NA
+acs_il[acs_il == -666666666] <- NA
+
+# print the data
+head(acs_il)
+```
+
+Now, it might be useful to rename the socio-demographic variables (B01001_001E etc.) in our data set and assign more meaningful names.
+
+```{r, eval=FALSE}
+# rename the column name
+acs_il <-
+  acs_il %>%
+  rename(pop = B01001_001E, 
+         age = B06002_001E, 
+         hh_income = B19013_001E, 
+         income = B19301_001E)
+```
+
+Then, we save the ACS data into .csv so that we don't need to generate the data repeatedly. Here, we turn of the code to create .csv file, so the data will not be replaced with new file. 
+
+```{r}
+#save the acs_il
+#write.csv(acs_il, file = "E:/Umich/727/class 4/acs_il.csv")
+
+#read the .csv file from directory
+acs_il <- read.csv("E:/Umich/727/class 4/acs_il.csv")
+```
+
+```{r}
+# show the dataset format
+head(acs_il)
+```
+
+It seems like we could try to use this location information listed above to merge this data set with the Google Trends data. However, we first have to clean NAME so that it has the same structure as location in the search interest by city data. Add a new variable location to the ACS data that only includes city names.
+
+```{r}
+# clean name of location in the acs_il data
+acs_il <- acs_il %>%
+  # remove all words after certain character
+  mutate(location = gsub("(.*),\\s*(.*?)\\s*$", "\\1", NAME))
+  
+  # remove the last word 
+  acs_il$location <- sub("\\s+\\w+$", "", acs_il$location)
+
+# check the result  
+head(acs_il)
+```
+
+
+### Answer the following questions with the `crime` and `loans` Google trends data and the ACS data.
+
+### 1. First, check how many cities don't appear in both data sets, i.e. cannot be matched. Then, create a new data set by joining the Google Trends and the ACS data. Keep only cities that appear in both data sets.
+
+```{r}
+# check cities in the res2 but don't appear in acs 
+res2_not_in_acs <- res_city_loans %>%
+  anti_join(acs_il, by = "location")
+
+# check cities in the acs but don't appear in res2 
+acs_il_not_in_res2 <- acs_il %>%
+  anti_join(res_city_loans, by = "location")
+
+# compute total cities in the res2 but don't appear in acs
+count_res2_not_in_acs <- nrow(res2_not_in_acs)
+
+# compute total cities in the acs but don't appear in res2 
+count_acs_il_not_in_res2 <- nrow(acs_il_not_in_res2)
+
+# print the result 
+cat("Cities in 'res2' but not in 'acs_il':", count_res2_not_in_acs, "\n")
+cat("Cities in 'acs_il' but not in 'res2':", count_acs_il_not_in_res2, "\n")
+cat("Total:",count_res2_not_in_acs+count_acs_il_not_in_res2,"\n")
+```
+
+After cleaning the name and matching the location, we found that 1126 cities do not appear in both data sets. 
+
+Below, we create a new data set by joining the Google Trends and the ACS data by keeping only cities that appear in both data sets.
+
+```{r}
+# join the data of res2 and acs with matched cities 
+join_res2_acsil <- res_city_loans %>%
+  inner_join(acs_il, by = "location")
+
+# check the result
+head(join_res2_acsil)
+```
+
+### 2. Compute the mean of the search popularity for both keywords for cities that have an above average median household income and for those that have an below average median household income. When building your pipe, start with creating the grouping variable and then proceed with the remaining tasks. What conclusions might you draw from this?
+
+```{r}
+# create a grouping variable based on above/below average median "hh_income"
+join_res2_acsil <- join_res2_acsil %>%
+  mutate(income_group = ifelse(hh_income > mean(hh_income, na.rm = TRUE),
+                               "Above Average", "Below Average"))
+
+# remove the observation with NA value of hh_income
+join_res2_acsil <- join_res2_acsil[complete.cases(join_res2_acsil[, "hh_income"]), ]
+
+# group by the "income_group" variable and calculate the mean for "crime" and "loans"
+mean_bygroup <- join_res2_acsil %>%
+  group_by(income_group) %>%
+  summarise(
+    Mean_Crime_Pop = mean(crime, na.rm = TRUE),
+    Mean_Loans_Pop = mean(loans, na.rm = TRUE)
+  )
+
+# print the result
+print(mean_bygroup)
+```
+
+Analysis:
+
+Based on the information above, we can see that the average search popularity of `crime` and `loans` is higher for cities with a median household income below the average. In other words, people living in cities with median household incomes below the average searched these two keywords more frequently.
+
+### 3. Is there a relationship between the median household income and the search popularity of the Google trends terms? Describe the relationship and use a scatterplot with qplot().
+
+```{r}
+# Create a scatterplot to visualize the relationship
+sc_plot1 <- qplot(x = hh_income, y = crime, data = join_res2_acsil, 
+          main = "Relationship Between Median Household Income and Crime Search Popularity",
+          xlab = "Median Household Income", ylab = "Crime Search Popularity")
+
+# Create a scatterplot to visualize the relationship
+sc_plot2 <- qplot(x = hh_income, y = loans, data = join_res2_acsil, 
+          main = "Relationship Between Median Household Income and loans Search Popularity",
+          xlab = "Median Household Income", ylab = "loans Search Popularity")
+
+# Print the scatterplot
+print(sc_plot1)
+print(sc_plot2)
+```
+
+Analysis:
+
+Based on the scatterplot above, it can be seen that for the keyword `loans`, the data tends to gather in the lower area of median household income (hh_income) and less in the higher hh_income range. Meanwhile, `crime` spreads across a wider range than hh_income and shows no discernible pattern. So it can be diagnosed that the hh_income variable may have a significant negative relationship with the frequency of searches for `loans`. In contrast, hh_income and `crime` are not significantly related even though they appear to have a negative direction. 
+
+```{r}
+# compute correlation and do correlation test for  median income with crime 
+correlation_test2 <- cor.test(join_res2_acsil$hh_income, join_res2_acsil$crime)
+print(correlation_test2)
+
+# compute correlation and do correlation test for median income with loans
+correlation_test3 <- cor.test(join_res2_acsil$hh_income, join_res2_acsil$loans)
+print(correlation_test3)
+```
+
+Analysis:
+
+The result shows that the correlation coefficient between the median income and `crime` is -0.01, and it is statistically not significant. This value indicates a weak and negative relationship between the two variables. If the median income is high, the search for `crime` tends to be high. On the other hand, the correlation between median income and `loan` is -0.27. This value shows a weak and negative relationship. This relationship is statistically insignificant. 
