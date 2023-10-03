@@ -60,3 +60,24 @@ res_time_w %>%
             med_hits=median(hits),
             var_sd=var(hits))
 ```
+
+Analysis :
+
+The summary statistics describe the search popularity of `crime` and `loans` in Illinois from January 1, 2020, to December 31, 2020. The mean of `loans` hits is higher than `crime` hits, with the value of 65.9 and 54.3. The mean from `loans` and `crime` search hits has a small discrepancy with the median, meaning there are no influential observations in the datasets. The variance of `loans` hits is higher than `crime` hits.  
+
+
+### 2. Which cities (locations) have the highest search frequency for `loans`? Note that there might be multiple rows for each city if there were hits for both "crime" and "loans" in that city. It might be easier to answer this question if we had the search hits info for both search terms in two separate variables. That is, each row would represent a unique city.
+
+
+```{r}
+# change the data format into wide format
+res_city_loans <- res$interest_by_city %>%
+  pivot_wider(names_from = keyword,
+              values_from= hits)%>%
+
+# sort the data by the value of search hits of loans
+arrange(desc(loans))
+
+# print the result 
+print(res_city_loans)
+```
