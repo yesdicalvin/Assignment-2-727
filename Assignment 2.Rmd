@@ -162,3 +162,19 @@ print(cov_city_hos)
 ```
 
 The cities with highest hits of `coronavirus` in Illinois are Ullin, Clarendon Hills, and Belknap.  
+
+### 3. Check relationship between hits `coronavirus` and `hospital`
+
+```{r}
+# create plot for cov
+plot(cov)
+```
+
+```{r}
+# compute correlation and do correlation test for  median income with coronavirus 
+corr_test_cov <-cor.test(cov_city_hos$hospital, cov_city_hos$coronavirus)
+print(corr_test_cov)
+```
+Analysis: 
+
+The graph shows the trend of the popularity of `coronavirus` search and `hospital` search in Illinois from January 1, 2020, to December 31, 2020. The plot of `coronavirus` search and `hospital` search popularity are different over time. There is a very high interest in `coronavirus` searches from February 2020 to May 2020. The popularity of `hospital` search is relatively stable over time. In other words, it means that they do not have a similar pattern. The correlation between `coronavirus` search and `hospital` search is -0.33, indicating a weak negative relationship. If the `coronavirus` search is high, the search of `hospital` tends to be low.
