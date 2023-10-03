@@ -139,3 +139,26 @@ res_cov_sub %>%
 Analysis:
 
 The mean of `coronavirus` hits is higher than hospital hits, with values of  15.8 and 3.8. A high discrepancy between the mean and median of `coronavirus` hits indicates the extremely high popularity of `coronavirus` searches at certain times. The variance of the `coronavirus` search is higher than the `hospital` search, with values of 426.16 and 0.21.
+
+### 2. Find cities with highest hits of `coronavirus`
+
+```{r}
+# change the data format into wide format
+ cov_city <- cov$interest_by_city 
+ cov_city <-  cov_city[!duplicated(cov_city), ] #remove duplication
+
+  cov_city_hos <- cov_city %>%
+  pivot_wider(names_from = keyword,
+  values_from = hits) %>%
+    
+# sort the data by the value of search hits of coronavirus
+arrange(desc(coronavirus))
+
+```
+
+```{r}
+# print the result 
+print(cov_city_hos)
+```
+
+The cities with highest hits of `coronavirus` in Illinois are Ullin, Clarendon Hills, and Belknap.  
