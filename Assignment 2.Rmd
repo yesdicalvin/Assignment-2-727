@@ -2,14 +2,19 @@
 title: "Assignment 2 727"
 author: "Aulia Dini & Yesdi Calvin"
 date: "2023-10-03"
-output: html_document
+output:
+  pdf_document: default
+  word_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+GitHub link :
 
+https://github.com/yesdicalvin/Assignment-2-727.git
 
 
 ```{r, message = FALSE}
@@ -25,13 +30,16 @@ library(ggplot2)
 
 Our first data source is the Google Trends API. Suppose we are interested in the search trends for crime and loans in Illinois in the year 2020. We could find this using the following code:
 
-```{r}
-set.seed(727)
+```{r, cache=TRUE}
 res <- gtrends(c("crime", "loans"), 
               geo = "US-IL", 
             time = "2020-01-01 2020-12-31", 
             low_search_volume = TRUE)
+
+# create plot for res
+plot(res)
 ```
+
 
 
 ### Answer the following questions for the keywords “crime” and “loans”.
@@ -63,7 +71,7 @@ res_time_w %>%
 
 Analysis :
 
-The summary statistics describe the search popularity of `crime` and `loans` in Illinois from January 1, 2020, to December 31, 2020. The mean of `loans` hits is higher than `crime` hits, with the value of 65.9 and 54.3. The mean from `loans` and `crime` search hits has a small discrepancy with the median, meaning there are no influential observations in the datasets. The variance of `loans` hits is higher than `crime` hits.  
+The summary above shows some statistics descriptive of the “crime” and “loans” search popularity in Illinois from January 1, 2020, to December 31, 2020. We can see that the mean of loans hits (66.09) was higher than crime hits (54.51). There were small discrepancies between the mean and the median of loans and crime search hits, meaning there were no influential observations in the datasets. Other than that, the variance of loans hits was higher than crime hits.
 
 
 ### 2. Which cities (locations) have the highest search frequency for `loans`? Note that there might be multiple rows for each city if there were hits for both "crime" and "loans" in that city. It might be easier to answer this question if we had the search hits info for both search terms in two separate variables. That is, each row would represent a unique city.
@@ -82,36 +90,33 @@ arrange(desc(loans))
 print(res_city_loans)
 ```
 
-The locations with highest value of hits for `loans` in Illinois are Alorton, Rosemont, and Coal City. 
+After sorting out the data in descending order, we found that the location with the highest value of hits for `loans` is Alorton, with the number of hits reaching 100, followed by Long Lake (94) and Georgetown (89). 
 
 ### 3. Is there a relationship between the search intensities between the two keywords we used?
 
-```{r}
-# create plot for res
-plot(res)
-```
+Analysis : 
 
+We can diagnose the relationship of search hits between these two keywords by looking at the graph of `crime` and `loans` trends. There is an inconsistent pattern between these two variables, which indicates a weak relationship. From January to September 2020 (9 months), generally, they fluctuated in different directions, indicating a negative relationship. However, for the rest (3 months), they were likely to move in the same direction, indicating a positive relationship. To make sure, we need to test it using the Pearson correlation test. 
 
 ```{r}
 # compute correlation and do correlation test for  median income with coronavirus 
 corr_test_res <-cor.test(res_city_loans$crime, res_city_loans$loans)
 print(corr_test_res)
 ```
-
-Analysis : 
-
-We can diagnose the relationship of search hits between these two keywords by looking at the plot above. There is a pattern between these two variables, which indicates a relationship. From January to October 2020, generally, they moved to different direction although after that until December 2020 they tend to had same direction. In other words, we can diagnose that there is a negative significant relationship. To make sure, we need to test it using the pearson correlation test. The correlation of hits between `crime` and `loans` is -0.54. There is a significant and negative relationship between the search intensities between `crime` and `loans`. As the search for `crime` is high, the search for `loans` is low.
+Based on the test, the correlation of search hits between `crime` and `loans` is -0.22. It means a weak and positive relationship exists between the search intensities between `crime` and `loans.` Moreover, the p-value is under the alpha (0.05). So, we do not have sufficient evidence to conclude that there is a significant relationship.
 
 ### Repeat the above for keywords related to covid. Make sure you use multiple keywords like we did above. Try several different combinations and think carefully about words that might make sense within this context.
 
 We try to use `coronavirus` and `hospital` as keywords. 
 
-```{r}
-set.seed(727)
+```{r, cache=TRUE}
 cov <- gtrends(c("coronavirus", "hospital"), 
                geo = "US-IL", 
                time = "2020-01-01 2020-12-31", 
                low_search_volume = TRUE)
+
+# create plot for cov
+plot(cov)
 ```
 
 
@@ -138,7 +143,7 @@ res_cov_sub %>%
 
 Analysis:
 
-The mean of `coronavirus` hits is higher than hospital hits, with values of  15.8 and 3.8. A high discrepancy between the mean and median of `coronavirus` hits indicates the extremely high popularity of `coronavirus` searches at certain times. The variance of the `coronavirus` search is higher than the `hospital` search, with values of 426.16 and 0.21.
+The mean of `coronavirus` hits was significantly higher than that of hospital, with values of  16.04 and 3.94, respectively. A high discrepancy between the mean and median of `coronavirus` hits indicates the extremely high popularity of `coronavirus` searches existed at certain times. The variance of the `coronavirus` search is higher than that of the hospital, with values of 436.24 and 0.17, respectively.
 
 ### 2. Find cities with highest hits of `coronavirus`
 
@@ -161,14 +166,10 @@ arrange(desc(coronavirus))
 print(cov_city_hos)
 ```
 
-The cities with highest hits of `coronavirus` in Illinois are Ullin, Clarendon Hills, and Belknap.  
+Three cities with the highest coronavirus search hits in Illinois were Clarendon Hills, Gladstone, and Joy.  
 
-### 3. Check relationship between hits `coronavirus` and `hospital`
+### 3. Check the relationship of the search hits between `coronavirus` and `hospital`
 
-```{r}
-# create plot for cov
-plot(cov)
-```
 
 ```{r}
 # compute correlation and do correlation test for  median income with coronavirus 
@@ -177,7 +178,7 @@ print(corr_test_cov)
 ```
 Analysis: 
 
-The graph shows the trend of the popularity of `coronavirus` search and `hospital` search in Illinois from January 1, 2020, to December 31, 2020. The plot of `coronavirus` search and `hospital` search popularity are different over time. There is a very high interest in `coronavirus` searches from February 2020 to May 2020. The popularity of `hospital` search is relatively stable over time. In other words, it means that they do not have a similar pattern. The correlation between `coronavirus` search and `hospital` search is -0.33, indicating a weak negative relationship. If the `coronavirus` search is high, the search of `hospital` tends to be low.
+The graph of coronavirus and hospital trends shows the trend of the popularity of the `coronavirus` search and `hospital` search in Illinois from January 1, 2020, to December 31, 2020. It is clearly seen that the trend of `coronavirus` search hits was different from that of `hospital` throughout the period. There was a high interest in the `coronavirus` topic from February 2020 to May 2020. The popularity of the `hospital` search was relatively stable over time. In other words, they did not have a similar pattern. The correlation between the `coronavirus` search and `hospital` search was -0.085, indicating a weak, negative, and insignificant relationship. In other words, if the `coronavirus` search increases, the search for `hospital` tends to decrease.
 
 
 ## **Google Trends + ACS**
@@ -236,10 +237,10 @@ Then, we save the ACS data into .csv so that we don't need to generate the data 
 
 ```{r}
 #save the acs_il
-#write.csv(acs_il, file = "E:/Umich/727/class 4/acs_il.csv")
+#write.csv(acs_il, file = "C:/Users/ASUS/Documents/SURVMETH727_2/project2727part2/acs_il.csv")
 
 #read the .csv file from directory
-acs_il <- read.csv("E:/Umich/727/class 4/acs_il.csv")
+acs_il <- read.csv("C:/Users/ASUS/Documents/SURVMETH727_2/project2727part2/acs_il.csv")
 ```
 
 ```{r}
@@ -288,7 +289,7 @@ cat("Cities in 'acs_il' but not in 'res2':", count_acs_il_not_in_res2, "\n")
 cat("Total:",count_res2_not_in_acs+count_acs_il_not_in_res2,"\n")
 ```
 
-After cleaning the name and matching the location, we found that 1126 cities do not appear in both data sets. 
+After cleaning the name and matching the location, we found that 1133 cities do not appear in both data sets. 
 
 Below, we create a new data set by joining the Google Trends and the ACS data by keeping only cities that appear in both data sets.
 
@@ -330,15 +331,15 @@ Based on the information above, we can see that the average search popularity of
 
 ### 3. Is there a relationship between the median household income and the search popularity of the Google trends terms? Describe the relationship and use a scatterplot with qplot().
 
-```{r}
+```{r, warning=FALSE}
 # Create a scatterplot to visualize the relationship
 sc_plot1 <- qplot(x = hh_income, y = crime, data = join_res2_acsil, 
-          main = "Relationship Between Median Household Income and Crime Search Popularity",
+          main = "Relationship Between hh_income and Crime Search Popularity",
           xlab = "Median Household Income", ylab = "Crime Search Popularity")
 
 # Create a scatterplot to visualize the relationship
 sc_plot2 <- qplot(x = hh_income, y = loans, data = join_res2_acsil, 
-          main = "Relationship Between Median Household Income and loans Search Popularity",
+          main = "Relationship Between hh_income and loans Search Popularity",
           xlab = "Median Household Income", ylab = "loans Search Popularity")
 
 # Print the scatterplot
@@ -348,7 +349,7 @@ print(sc_plot2)
 
 Analysis:
 
-Based on the scatterplot above, it can be seen that for the keyword `loans`, the data tends to gather in the lower area of median household income (hh_income) and less in the higher hh_income range. Meanwhile, `crime` spreads across a wider range than hh_income and shows no discernible pattern. So it can be diagnosed that the hh_income variable may have a significant negative relationship with the frequency of searches for `loans`. In contrast, hh_income and `crime` are not significantly related even though they appear to have a negative direction. 
+Based on the scatterplot above, the plot between hh_income and `crime` and the plot between hh_income and `loans` spreads across a wider range and shows no discernible pattern. So it can be diagnosed that the hh_income variable may have an insignificant negative relationship with the frequency of searches for `loans` and  `crime`. 
 
 ```{r}
 # compute correlation and do correlation test for  median income with crime 
@@ -362,7 +363,7 @@ print(correlation_test3)
 
 Analysis:
 
-The result shows that the correlation coefficient between the median income and `crime` is -0.01, and it is statistically not significant. This value indicates a weak and negative relationship between the two variables. If the median income is high, the search for `crime` tends to be high. On the other hand, the correlation between median income and `loan` is -0.27. This value shows a weak and negative relationship. This relationship is statistically insignificant. 
+The result shows that the correlation coefficient between the median income and `crime` is -0.16, and it is statistically not significant. This value indicates a weak and negative relationship between the two variables. If the median income decreases, the search for `crime` tends to increases. The correlation between median income and `loans` is -0.11. This value shows a weak and negative relationship. If the median income decreases, the search for `loans` tends to increases. This relationship is statistically insignificant. 
 
 ### Repeat the above steps using the covid data and the ACS data.
 
@@ -389,7 +390,7 @@ cat("Cities in 'acs_il' but not in 'cov2':", count_acs_il_not_in_cov2, "\n")
 cat("Total:",count_cov2_not_in_acs+count_acs_il_not_in_cov2,"\n")
 ```
 
-Here, we found 1133 cities that do not appear in both data sets. 
+Here, we found 1125 cities that do not appear in both data sets. 
 
 Below, we create a new data set by joining the Google Trends and the ACS data by keeping only cities that appear in both data sets.
 
@@ -427,25 +428,28 @@ print(mean_bygroup)
 
 Analysis :
 
-Based on the table above, we can see that the average search for `coronavirus` and `hospital` is higher for cities with median household income above the average. People living in cities with a median household income above the average search the two keywords more frequently. 
+Based on the table above, we can see that the average search for `coronavirus` is higher for cities with a median household income above the average. However, the average search for `hospital` is higher for cities with a median household income below average. 
 
 ### 3. Check the relationship between the median household income and the search popularity of the Google trends terms. Describe the relationship and use a scatterplot with `qplot()`.
 
-```{r}
+```{r, warning=FALSE}
 # Create a scatterplot to visualize the relationship
 sc_plot1 <- qplot(x = hh_income, y = coronavirus, data = join_cov2_acsil, 
-          main = "Relationship Between Median Household Income and Coronavirus Search Popularity",
+          main = "Relationship Between hh_income and Coronavirus Search Popularity",
           xlab = "Median Household Income", ylab = "Coronavirus Search Popularity")
 
 # Create a scatterplot to visualize the relationship
 sc_plot2 <- qplot(x = hh_income, y = hospital, data = join_cov2_acsil, 
-          main = "Relationship Between Median Household Income and Hospital Search Popularity",
+          main = "Relationship Between hh_income and Hospital Search Popularity",
           xlab = "Median Household Income", ylab = "Hospital Search Popularity")
 
 # Print the scatterplot
 print(sc_plot1)
 print(sc_plot2)
 ```
+Analysis: 
+
+The scatter plot shows a slightly increasing pattern between hh_income and the `coronavirus` popularity search. The distribution of hh_income was concentrated from 0 to 75,000. In brief, we can diagnose that there is a positive and significant relationship between these two variables. The scatterplot between search hits of `hospital` and hh_income shows a linear pattern with some extreme values. 
 
 ```{r}
 # compute correlation and do correlation test for  median income with coronavirus 
@@ -456,9 +460,7 @@ print(correlation_test2)
 correlation_test3<-cor.test(join_cov2_acsil$hh_income, join_cov2_acsil$hospital)
 print(correlation_test3)
 ```
+Analysis:
 
-Analysis: 
+The correlation between hh_income and `coronavirus` confirms this finding with a value of 0.33. This correlation score means that the search hits for `coronavirus` have a weak, positive, and significant relationship with hh_income. If the hh_income increases, the value of search hits of `coronavirus` also increases. The correlation coefficient between hh_income and `hospital` is insignificant, with a value of -0.05, which means there is not any significant relationship between search hits of `hospital` and the hh_income.
 
-The scatter plot shows a slightly increasing pattern between median household income and the `coronavirus` popularity search. The distribution of median household income was concentrated from 0 to 75,000. The correlation value confirms this finding with a value of 0.27. This correlation score means that the search hits for `coronavirus` have a weak and positive relationship with the median household income. If the median household income is high, the value of search hits of `coronavirus` is also high. 
-
-The scatterplot between search hits of `hospital` and median household income shows a linear pattern. There is not any specific trend between the two variables. The correlation coefficient is insignificant, with a value of 0.00033, which means there is not any relationship between search hits of `hospital` and the median household income.
